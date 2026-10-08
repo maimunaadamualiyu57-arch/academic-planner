@@ -1,4 +1,4 @@
- import streamlit as st
+import streamlit as st
 from logic import get_student_list, save_test_scores, save_attendance_record
 
 st.set_page_config(page_title="Academic Tracker", page_icon="📚")
