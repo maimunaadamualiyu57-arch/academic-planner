@@ -32,31 +32,32 @@ with tab1:
         index=None, placeholder="Choose a subject", key="score_subject")
 
     if subject:
-        score_cols = ["1st (10)", "2nd (10)", "3rd (10)", "Exam (70)"]
+        score_cols = ["1st", "2nd", "3rd", "Exam"]
         base = pd.DataFrame({"Student": get_student_list()})
         for c in score_cols:
-            base[c] = 0.0
+            base[c] = float("nan")
 
-        st.caption("Tap a box and type the score.")
+        st.caption("1st, 2nd, 3rd = 10 marks each. Exam = 70 marks. "
+                   "Tap a box and type the score. Type 0 if the child scored zero.")
         edited = st.data_editor(
             base,
             hide_index=True,
             disabled=["Student"],
             use_container_width=True,
             column_config={
-                "Student": st.column_config.TextColumn("Student", width="small", pinned=True),
-                "1st (10)": st.column_config.NumberColumn(min_value=0, max_value=10, step=1, width="small", format="%d"),
-                "2nd (10)": st.column_config.NumberColumn(min_value=0, max_value=10, step=1, width="small", format="%d"),
-                "3rd (10)": st.column_config.NumberColumn(min_value=0, max_value=10, step=1, width="small", format="%d"),
-                "Exam (70)": st.column_config.NumberColumn(min_value=0, max_value=70, step=1, width="small", format="%d"),
+                "Student": st.column_config.TextColumn("Student", width=115, pinned=True),
+                "1st": st.column_config.NumberColumn(min_value=0, max_value=10, step=1, width=52, format="%d"),
+                "2nd": st.column_config.NumberColumn(min_value=0, max_value=10, step=1, width=52, format="%d"),
+                "3rd": st.column_config.NumberColumn(min_value=0, max_value=10, step=1, width=52, format="%d"),
+                "Exam": st.column_config.NumberColumn(min_value=0, max_value=70, step=1, width=55, format="%d"),
             },
             key=f"scores_{subject}_{term}_{session}",
         )
 
-        scores = edited[score_cols].fillna(0)
+        scores = edited[score_cols]
         totals = pd.DataFrame({
             "Student": edited["Student"],
-            "Total (100)": scores.sum(axis=1),
+            "Total (100)": scores.sum(axis=1, min_count=1),
         })
 
         st.subheader("Totals")
@@ -66,8 +67,8 @@ with tab1:
             hide_index=True,
             use_container_width=True,
             column_config={
-                "Student": st.column_config.TextColumn(width="medium"),
-                "Total (100)": st.column_config.NumberColumn(width="small", format="%d"),
+                "Student": st.column_config.TextColumn(width=140),
+                "Total (100)": st.column_config.NumberColumn(width=85, format="%d"),
             },
         )
 
