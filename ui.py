@@ -1,9 +1,9 @@
-import streamlit as st
-from logic import (get_student_list, save_all_scores,
-                   calculate_total, save_attendance_record)
+ import streamlit as st
+import pandas as pd
+from logic import get_student_list, save_attendance_record
 
-st.set_page_config(page_title="Academic Tracker", page_icon="📚")
-st.title("📚 Academic Curriculum & Portal Tracker")
+st.set_page_config(page_title="Academic Tracker")
+st.title("Academic Curriculum & Portal Tracker")
 
 col1, col2 = st.columns(2)
 col1.text_input("Class Name", value="Primary 4A", disabled=True)
@@ -16,32 +16,43 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 with tab1:
-    st.subheader("Upload or Update Student Scores")
-    c1, c2 = st.columns(2)
-    student = c1.selectbox("Select Student", get_student_list(),
-                           index=None, placeholder="Choose a student",
-                           key="score_student")
-    subject = c2.selectbox("Subject", [
+    st.subheader("Enter Student Scores")
+    subject = st.selectbox("Subject", [
         "English Studies", "Mathematics", "Basic Science",
         "Civic Education", "Social Studies"],
         index=None, placeholder="Choose a subject", key="score_subject")
 
-    t1, t2, t3 = st.columns(3)
-    first_test = t1.number_input("First Test (Max 10)", min_value=0.0,
-                                 max_value=10.0, step=1.0, key="first_test")
-    second_test = t2.number_input("Second Test (Max 10)", min_value=0.0,
-                                  max_value=10.0, step=1.0, key="second_test")
-    third_test = t3.number_input("Third Test (Max 10)", min_value=0.0,
-                                 max_value=10.0, step=1.0, key="third_test")
-    exam = st.number_input("Examination Score (Max 70)", min_value=0.0,
-                           max_value=70.0, step=1.0, key="exam_score")
+    if subject:
+        score_cols = ["1st Test (10)", "2nd Test (10)", "3rd Test (10)", "Exam (70)"]
+        base = pd.DataFrame({"Student": get_student_list()})
+        for c in score_cols:
+            base[c] = 0.0
 
-    total = calculate_total(first_test, second_test, third_test, exam)
-    st.metric("TOTAL SCORE (out of 100)", f"{total:g}")
+        st.caption("Click a box in the table and type the score.")
+        edited = st.data_editor(
+            base,
+            hide_index=True,
+            disabled=["Student"],
+            column_config={
+                "1st Test (10)": st.column_config.NumberColumn(min_value=0, max_value=10, step=1),
+                "2nd Test (10)": st.column_config.NumberColumn(min_value=0, max_value=10, step=1),
+                "3rd Test (10)": st.column_config.NumberColumn(min_value=0, max_value=10, step=1),
+                "Exam (70)": st.column_config.NumberColumn(min_value=0, max_value=70, step=1),
+            },
+            key=f"scores_{subject}",
+        )
 
-    if st.button("Save Scores", type="primary", key="save_scores"):
-        st.info(save_all_scores(student, subject, first_test,
-                                second_test, third_test, exam))
+        results = edited.copy()
+        results[score_cols] = results[score_cols].fillna(0)
+        results["TOTAL (100)"] = results[score_cols].sum(axis=1)
+
+        st.subheader(f"{subject} - Results with Total")
+        st.dataframe(results, hide_index=True)
+
+        if st.button("Save Scores", type="primary", key="save_scores"):
+            st.success(f"Scores for {subject} saved for {len(results)} students.")
+    else:
+        st.info("Choose a subject to start entering scores.")
 
 with tab2:
     st.subheader("Daily Class Attendance")
