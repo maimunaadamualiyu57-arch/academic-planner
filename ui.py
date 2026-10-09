@@ -4,6 +4,21 @@ from logic import get_student_list, save_attendance_record
 
 st.set_page_config(page_title="Nurain Integrated School")
 
+
+def grade_remark(total):
+    if pd.isna(total):
+        return "", ""
+    if total >= 70:
+        return "A", "Excellent"
+    if total >= 60:
+        return "B", "Very Good"
+    if total >= 50:
+        return "C", "Good"
+    if total >= 40:
+        return "D", "Fair"
+    return "F", "Poor"
+
+
 st.title("Nurain Integrated School, Gombe")
 st.caption("Academic Curriculum & Portal Tracker")
 
@@ -57,18 +72,23 @@ with tab1:
         scores = edited[score_cols]
         totals = pd.DataFrame({
             "Student": edited["Student"],
-            "Total (100)": scores.sum(axis=1, min_count=1),
+            "Total": scores.sum(axis=1, min_count=1),
         })
+        gr = totals["Total"].apply(grade_remark)
+        totals["Grade"] = [g for g, r in gr]
+        totals["Remark"] = [r for g, r in gr]
 
-        st.subheader("Totals")
+        st.subheader("Totals, Grades & Remarks")
         st.caption(f"{subject} | {term} | {session} Session")
         st.dataframe(
             totals,
             hide_index=True,
             use_container_width=True,
             column_config={
-                "Student": st.column_config.TextColumn(width=140),
-                "Total (100)": st.column_config.NumberColumn(width=85, format="%d"),
+                "Student": st.column_config.TextColumn(width=115),
+                "Total": st.column_config.NumberColumn("Total (100)", width=70, format="%d"),
+                "Grade": st.column_config.TextColumn(width=55),
+                "Remark": st.column_config.TextColumn(width=90),
             },
         )
 
