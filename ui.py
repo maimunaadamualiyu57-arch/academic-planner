@@ -1,4 +1,4 @@
- import streamlit as st
+import streamlit as st
 from logic import (get_student_list, save_all_scores,
                    calculate_total, save_attendance_record)
 
